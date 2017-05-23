@@ -1,0 +1,14 @@
+name: concrete-env
+channels: 
+  - conda-forge
+  - ioam
+dependencies:
+  - python=2.7
+  - numpy
+  - holoviews
+  - jupyter
+  - pandas
+  - matplotlib
+  - pip:
+    - tqdm
+    - tensorflow
