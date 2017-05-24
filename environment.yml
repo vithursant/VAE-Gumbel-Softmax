@@ -9,6 +9,9 @@ dependencies:
   - jupyter
   - pandas
   - matplotlib
+  - seaborn
   - pip:
     - tqdm
+    - packaging
+    - appdirs
     - tensorflow

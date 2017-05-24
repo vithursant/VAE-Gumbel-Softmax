@@ -1,2 +1,4 @@
 notebooks/MNIST_data/
 notebooks/.ipynb_checkpoints/
+data/
+log/
