@@ -1,4 +1,4 @@
-name: concrete-env
+name: vae-gumbel-env
 channels: 
   - conda-forge
   - ioam

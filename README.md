@@ -44,7 +44,7 @@ conda env create -f environment.yml
 To activate Anaconda environment:
 
 ```python
-source activate dlfractals-env
+source activate vae-gumbel-env
 ```
 
 ### Anaconda: Train
