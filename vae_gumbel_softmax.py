@@ -5,6 +5,7 @@ import tensorflow.contrib.slim as slim
 import numpy as np
 import seaborn as sns
 import os
+import time
 from tqdm import trange, tqdm
 
 from matplotlib import pyplot as plt
@@ -17,10 +18,14 @@ distributions = tf.contrib.distributions
 
 bernoulli = distributions.Bernoulli
 
+# Define current_time
+current_time = time.strftime('%Y-%m-%d-%H-%M-%S')
+
 # Define Directory Parameters
 flags = tf.app.flags
 flags.DEFINE_string('data_dir', os.getcwd() + '/data/', 'Directory for data')
 flags.DEFINE_string('log_dir', os.getcwd() + '/log/', 'Directory for logs')
+flags.DEFINE_string('checkpoint_dir', os.getcwd() + '/checkpoint/' + current_time, 'Directory for checkpoints')
 
 # Define Model Parameters
 flags.DEFINE_integer('batch_size', 100, 'Minibatch size')
@@ -114,38 +119,65 @@ def train():
     learning_rate = tf.placeholder(tf.float32, [], name='lr_value')
 
     # Get data i.e. MNIST
-    data = input_data.read_data_sets(FLAGS.data_dir + '/MNIST', one_hot=True).train
+    data = input_data.read_data_sets(FLAGS.data_dir + '/MNIST', one_hot=True)
     logits_y, q_y, log_q_y = encoder(inputs)
     
     # Setup decoder
     p_x = decoder(tau, logits_y)
+
     train_op, loss = create_train_op(inputs, learning_rate, q_y, log_q_y, p_x)
     init_op = [tf.global_variables_initializer(), tf.local_variables_initializer()]
 
-    dat = []
-    sess = tf.InteractiveSession()
+    sess = tf.Session()
+    saver = tf.train.Saver()
+
     sess.run(init_op)
-  
-    for i in tqdm(range(1, FLAGS.num_iters)):
-        np_x, np_y = data.next_batch(FLAGS.batch_size)
-        _, np_loss = sess.run([train_op, loss], 
-                              {inputs: np_x, learning_rate: FLAGS.learning_rate, tau: FLAGS.init_temp})
+    dat = []
 
-        if i % 100 == 1:
-            dat.append([i, FLAGS.min_temp, np_loss])
-        if i % 1000 == 1:
-            FLAGS.min_temp = np.maximum(FLAGS.init_temp * np.exp(-FLAGS.anneal_rate * i), 
+    # Start input enqueue threads.
+    coord = tf.train.Coordinator()
+    threads = tf.train.start_queue_runners(sess=sess, coord=coord)
+    
+    try:
+        for i in tqdm(range(1, FLAGS.num_iters)):
+            np_x, np_y = data.train.next_batch(FLAGS.batch_size)
+            _, np_loss = sess.run([train_op, loss], {inputs: np_x, learning_rate: FLAGS.learning_rate, tau: FLAGS.init_temp})
+            #_, np_loss = sess.run([train_op, loss], inputs : )
+
+            if i % 10000 == 1:
+                path = saver.save(sess, FLAGS.checkpoint_dir + '/modek.ckpt')
+                print('Model saved at iteration {} in checkpoint {}'.format(i, path))
+                dat.append([i, FLAGS.min_temp, np_loss])
+            if i % 1000 == 1:
+                FLAGS.min_temp = np.maximum(FLAGS.init_temp * np.exp(-FLAGS.anneal_rate * i), 
                                         FLAGS.min_temp)
-            FLAGS.learning_rate *= 0.9
-        if i % 5000 == 1:
-            print('Step %d, ELBO: %0.3f' % (i, -np_loss))
+                FLAGS.learning_rate *= 0.9
+                print('Temperature updated to {}\n'.format(FLAGS.min_temp) +
+                      'Learning rate updated to {}'.format(FLAGS.learning_rate))
+            if i % 5000 == 1:
+                print('Iteration {}\nELBO: {}\n'.format(i, -np_loss))
 
-def main(_):
+        #coord.request_stop()
+        #coord.join(threads)
+        #sess.close()
+
+    except KeyboardInterrupt:
+       print()
+
+    finally:
+        #save(saver, sess, FLAGS.log_dir, i)
+        coord.request_stop()
+        coord.join(threads)
+        sess.close()
+
+def main():
     if tf.gfile.Exists(FLAGS.log_dir):
         tf.gfile.DeleteRecursively(FLAGS.log_dir)
     tf.gfile.MakeDirs(FLAGS.log_dir)
     tf.gfile.MakeDirs(FLAGS.data_dir)
+    tf.gfile.MakeDirs(FLAGS.checkpoint_dir)
     train()
 
 if __name__=="__main__":
-    tf.app.run()
+    #tf.app.run()
+    main()
