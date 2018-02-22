@@ -84,4 +84,4 @@ Note: Current Dockerfile is for TensorFlow 1.5 CPU training.
 
 | Ground Truth 	| Reconstructions 	|
 |:------------:	|:---------------:	|
-![](./results/original.jpg)              	|![](./results/recons.jpg)                   	|
+![](results/original.jpg) | ![](results/recons.jpg)
