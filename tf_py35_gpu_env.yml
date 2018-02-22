@@ -1,9 +1,9 @@
-name: vae-gumbel-env
-channels: 
+name: tf-py35-gpu-env
+channels:
   - conda-forge
   - ioam
 dependencies:
-  - python=2.7
+  - python=3.5
   - numpy
   - holoviews
   - jupyter
@@ -14,4 +14,4 @@ dependencies:
     - tqdm
     - packaging
     - appdirs
-    - tensorflow
+    - tensorflow-gpu

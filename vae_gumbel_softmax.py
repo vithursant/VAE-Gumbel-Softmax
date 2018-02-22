@@ -33,7 +33,7 @@ flags.DEFINE_string('checkpoint_dir', os.getcwd() + '/checkpoint/' + current_tim
 
 # Define Model Parameters
 flags.DEFINE_integer('batch_size', 100, 'Minibatch size')
-flags.DEFINE_integer('num_iters', 500, 'Number of iterations')
+flags.DEFINE_integer('num_iters', 50000, 'Number of iterations')
 flags.DEFINE_float('learning_rate', 0.001, 'Learning rate')
 flags.DEFINE_integer('num_classes', 10, 'Number of classes')
 flags.DEFINE_integer('num_cat_dists', 200, 'Number of categorical distributions') # num_cat_dists//num_calsses
