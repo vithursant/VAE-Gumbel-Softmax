@@ -11,6 +11,8 @@ def make_squares(images, nr_images_per_side):
 
 def plot_squares(originals, reconstructs, nr_images_per_side):
     originals_square = make_squares(originals, nr_images_per_side)
+    plt.imsave('./results/original.png', originals_square, cmap='viridis')
     reconstructs_square = make_squares(reconstructs, nr_images_per_side)
+    plt.imsave('./results/recons.png', reconstructs_square, cmap='viridis')
     combined = np.concatenate([originals_square, reconstructs_square], axis=1)
     plt.imsave('./results/combined.png', combined, cmap='viridis')
