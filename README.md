@@ -82,6 +82,20 @@ Note: Current Dockerfile is for TensorFlow 1.5 CPU training.
 
 ## Results
 
+### Hyperparameters
+```python
+Batch Size:                         100
+Number of Iterations:               50000
+Learning Rate:                      0.001
+Initial Temperature:                1.0
+Minimum Temperature:                0.5
+Anneal Rate:                        0.00003
+Straight-Through Gumbel-Softmax:    False
+KL-divergence:                      Relaxed
+Learnable Temperature:              False
+```
+
+### MNIST
 | Ground Truth 	| Reconstructions 	|
 |:------------:	|:---------------:	|
-![](results/original.jpg) | ![](results/recons.jpg)
+|![](results/original.png) | ![](results/recons.png)|
