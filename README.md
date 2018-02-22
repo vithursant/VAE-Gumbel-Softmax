@@ -54,3 +54,6 @@ Train VAE-Gumbel-Softmax model on the local machine using MNIST dataset:
 ```python
 python vae_gumbel_softmax.py
 ```
+
+### Docker
+

@@ -1,4 +1,6 @@
 from __future__ import print_function
+import matplotlib
+matplotlib.use('Agg')
 
 import tensorflow as tf
 import tensorflow.contrib.slim as slim
@@ -31,7 +33,7 @@ flags.DEFINE_string('checkpoint_dir', os.getcwd() + '/checkpoint/' + current_tim
 
 # Define Model Parameters
 flags.DEFINE_integer('batch_size', 100, 'Minibatch size')
-flags.DEFINE_integer('num_iters', 50000, 'Number of iterations')
+flags.DEFINE_integer('num_iters', 500, 'Number of iterations')
 flags.DEFINE_float('learning_rate', 0.001, 'Learning rate')
 flags.DEFINE_integer('num_classes', 10, 'Number of classes')
 flags.DEFINE_integer('num_cat_dists', 200, 'Number of categorical distributions') # num_cat_dists//num_calsses
@@ -66,7 +68,8 @@ def encoder(x):
                      slim.fully_connected,
                      [512, 256])
 
-    # Unnormalized logits for number of classes (N) seperate K-categorical distributions
+    # Unnormalized logits for number of classes (N) seperate K-categorical
+    # distributions
     logits_y = tf.reshape(slim.fully_connected(net,
                                                FLAGS.num_classes*FLAGS.num_cat_dists,
                                                activation_fn=None),
@@ -95,11 +98,7 @@ def decoder(tau, logits_y):
 
     return p_x
 
-def create_train_op(x,
-                    lr,
-                    q_y,
-                    log_q_y,
-                    p_x):
+def create_train_op(x, lr, q_y, log_q_y, p_x):
 
     kl_tmp = tf.reshape(q_y * (log_q_y - tf.log(1.0 / FLAGS.num_classes)),
                         [-1, FLAGS.num_cat_dists, FLAGS.num_classes])
@@ -115,7 +114,6 @@ def create_train_op(x,
 def train():
 
     # Setup encoder
-    # input image x (shape=(batch_size, 784))
     inputs = tf.placeholder(tf.float32, shape=[None, 784], name='inputs')
     tau = tf.placeholder(tf.float32, [], name='temperature')
     learning_rate = tf.placeholder(tf.float32, [], name='lr_value')
@@ -144,7 +142,6 @@ def train():
         for i in tqdm(range(1, FLAGS.num_iters)):
             np_x, np_y = data.train.next_batch(FLAGS.batch_size)
             _, np_loss = sess.run([train_op, loss], {inputs: np_x, learning_rate: FLAGS.learning_rate, tau: FLAGS.init_temp})
-            #_, np_loss = sess.run([train_op, loss], inputs : )
 
             if i % 10000 == 1:
                 path = saver.save(sess, FLAGS.checkpoint_dir + '/modek.ckpt')
@@ -152,7 +149,7 @@ def train():
                 dat.append([i, FLAGS.min_temp, np_loss])
             if i % 1000 == 1:
                 FLAGS.min_temp = np.maximum(FLAGS.init_temp * np.exp(-FLAGS.anneal_rate * i),
-                                        FLAGS.min_temp)
+                                            FLAGS.min_temp)
                 FLAGS.learning_rate *= 0.9
                 print('Temperature updated to {}\n'.format(FLAGS.min_temp) +
                       'Learning rate updated to {}'.format(FLAGS.learning_rate))
@@ -180,9 +177,7 @@ def plot_vae_gumbel(p_x, inputs, tau, learning_rate, data, sess):
 
     tmp = np.reshape(np_x,(-1,280,28)) # (10,280,28)
     img = np.hstack([tmp[i] for i in range(10)])
-    plt.imsave('test.png', img)
-    plt.grid('off')
-    plotsquares(batch[0], np_x, 8)
+    plot_squares(batch[0], np_x, 8)
 
 def main():
     if tf.gfile.Exists(FLAGS.log_dir):
