@@ -14,8 +14,6 @@ Also, included is a jupyter notebook which shows how the Gumbel-Max trick for sa
 * [Ananconda](#anaconda)
 * [Docker](#docker)
 * [Results](#results)
-* [Future Work](#future-work)
-
 
 ## Installation
 
