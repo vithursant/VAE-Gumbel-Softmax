@@ -1,3 +1,5 @@
+*.png
+*.pyc
 notebooks/MNIST_data/
 notebooks/.ipynb_checkpoints/
 data/

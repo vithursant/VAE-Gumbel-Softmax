@@ -8,6 +8,8 @@ import os
 import time
 from tqdm import trange, tqdm
 
+from plot_utils import *
+
 from matplotlib import pyplot as plt
 from tensorflow.examples.tutorials.mnist import input_data
 
@@ -30,7 +32,7 @@ flags.DEFINE_string('checkpoint_dir', os.getcwd() + '/checkpoint/' + current_tim
 # Define Model Parameters
 flags.DEFINE_integer('batch_size', 100, 'Minibatch size')
 flags.DEFINE_integer('num_iters', 50000, 'Number of iterations')
-flags.DEFINE_float('learning_rate', 3e-4, 'Learning rate') 
+flags.DEFINE_float('learning_rate', 0.001, 'Learning rate')
 flags.DEFINE_integer('num_classes', 10, 'Number of classes')
 flags.DEFINE_integer('num_cat_dists', 200, 'Number of categorical distributions') # num_cat_dists//num_calsses
 flags.DEFINE_float('init_temp', 1.0, 'Initial temperature')
@@ -52,22 +54,22 @@ def gumbel_softmax(logits, temperature, hard=False):
 
     if hard:
         k = tf.shape(logits)[-1]
-        y_hard = tf.cast(tf.equal(y, tf.reduce_max(y, 1, keep_dims=True)), 
+        y_hard = tf.cast(tf.equal(y, tf.reduce_max(y, 1, keep_dims=True)),
                          y.dtype)
         y = tf.stop_gradient(y_hard - y) + y
-    
+
     return y
- 
-def encoder(x): 
+
+def encoder(x):
     # Variational posterior q(y|x), i.e. the encoder (shape=(batch_size, 200))
-    net = slim.stack(x, 
-                     slim.fully_connected, 
+    net = slim.stack(x,
+                     slim.fully_connected,
                      [512, 256])
 
     # Unnormalized logits for number of classes (N) seperate K-categorical distributions
-    logits_y = tf.reshape(slim.fully_connected(net, 
-                                               FLAGS.num_classes*FLAGS.num_cat_dists, 
-                                               activation_fn=None), 
+    logits_y = tf.reshape(slim.fully_connected(net,
+                                               FLAGS.num_classes*FLAGS.num_cat_dists,
+                                               activation_fn=None),
                           [-1, FLAGS.num_cat_dists])
 
     q_y = tf.nn.softmax(logits_y)
@@ -76,35 +78,35 @@ def encoder(x):
     return logits_y, q_y, log_q_y
 
 def decoder(tau, logits_y):
-    y = tf.reshape(gumbel_softmax(logits_y, tau, hard=False), 
+    y = tf.reshape(gumbel_softmax(logits_y, tau, hard=False),
                    [-1, FLAGS.num_cat_dists, FLAGS.num_classes])
-    
+
     # Generative model p(x|y), i.e. the decoder (shape=(batch_size, 200))
-    net = slim.stack(slim.flatten(y), 
-                     slim.fully_connected, 
+    net = slim.stack(slim.flatten(y),
+                     slim.fully_connected,
                      [256, 512])
 
-    logits_x = slim.fully_connected(net, 
-                                    784, 
+    logits_x = slim.fully_connected(net,
+                                    784,
                                     activation_fn=None)
 
     # (shape=(batch_size, 784))
     p_x = bernoulli(logits=logits_x)
-    
+
     return p_x
 
 def create_train_op(x,
-                    lr,  
-                    q_y, 
-                    log_q_y, 
+                    lr,
+                    q_y,
+                    log_q_y,
                     p_x):
 
-    kl_tmp = tf.reshape(q_y * (log_q_y - tf.log(1.0 / FLAGS.num_classes)), 
+    kl_tmp = tf.reshape(q_y * (log_q_y - tf.log(1.0 / FLAGS.num_classes)),
                         [-1, FLAGS.num_cat_dists, FLAGS.num_classes])
-    
+
     KL = tf.reduce_sum(kl_tmp, [1,2])
     elbo = tf.reduce_sum(p_x.log_prob(x), 1) - KL
-    
+
     loss = tf.reduce_mean(-elbo)
     train_op = tf.train.AdamOptimizer(learning_rate=lr).minimize(loss)
 
@@ -121,7 +123,7 @@ def train():
     # Get data i.e. MNIST
     data = input_data.read_data_sets(FLAGS.data_dir + '/MNIST', one_hot=True)
     logits_y, q_y, log_q_y = encoder(inputs)
-    
+
     # Setup decoder
     p_x = decoder(tau, logits_y)
 
@@ -137,7 +139,7 @@ def train():
     # Start input enqueue threads.
     coord = tf.train.Coordinator()
     threads = tf.train.start_queue_runners(sess=sess, coord=coord)
-    
+
     try:
         for i in tqdm(range(1, FLAGS.num_iters)):
             np_x, np_y = data.train.next_batch(FLAGS.batch_size)
@@ -149,7 +151,7 @@ def train():
                 print('Model saved at iteration {} in checkpoint {}'.format(i, path))
                 dat.append([i, FLAGS.min_temp, np_loss])
             if i % 1000 == 1:
-                FLAGS.min_temp = np.maximum(FLAGS.init_temp * np.exp(-FLAGS.anneal_rate * i), 
+                FLAGS.min_temp = np.maximum(FLAGS.init_temp * np.exp(-FLAGS.anneal_rate * i),
                                         FLAGS.min_temp)
                 FLAGS.learning_rate *= 0.9
                 print('Temperature updated to {}\n'.format(FLAGS.min_temp) +
@@ -160,6 +162,7 @@ def train():
         #coord.request_stop()
         #coord.join(threads)
         #sess.close()
+        plot_vae_gumbel(p_x, inputs, tau, learning_rate, data, sess)
 
     except KeyboardInterrupt:
        print()
@@ -170,6 +173,17 @@ def train():
         coord.join(threads)
         sess.close()
 
+def plot_vae_gumbel(p_x, inputs, tau, learning_rate, data, sess):
+    x_mean = p_x.mean()
+    batch = data.test.next_batch(FLAGS.batch_size)
+    np_x = sess.run(x_mean, {inputs: batch[0], learning_rate: FLAGS.learning_rate, tau: FLAGS.init_temp})
+
+    tmp = np.reshape(np_x,(-1,280,28)) # (10,280,28)
+    img = np.hstack([tmp[i] for i in range(10)])
+    plt.imsave('test.png', img)
+    plt.grid('off')
+    plotsquares(batch[0], np_x, 8)
+
 def main():
     if tf.gfile.Exists(FLAGS.log_dir):
         tf.gfile.DeleteRecursively(FLAGS.log_dir)
@@ -179,5 +193,4 @@ def main():
     train()
 
 if __name__=="__main__":
-    #tf.app.run()
     main()
