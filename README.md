@@ -9,7 +9,6 @@ TensorFlow implementation of a Variational Autoencoder with Gumbel-Softmax Distr
 Also, included is a jupyter notebook which shows how the Gumbel-Max trick for sampling discrete variables relates to Concrete distributions.
 
 ## Table of Contents
-* [Dataset](#dataset)
 * [Installation](#installation)
 * [Ananconda](#anaconda)
 * [Docker](#docker)
