@@ -29,6 +29,7 @@ current_time = time.strftime('%Y-%m-%d-%H-%M-%S')
 flags = tf.app.flags
 flags.DEFINE_string('data_dir', os.getcwd() + '/data/', 'Directory for data')
 flags.DEFINE_string('log_dir', os.getcwd() + '/log/', 'Directory for logs')
+flags.DEFINE_string('results_dir', os.getcwd() + '/results/', 'Directory for results')
 flags.DEFINE_string('checkpoint_dir', os.getcwd() + '/checkpoint/' + current_time, 'Directory for checkpoints')
 
 # Define Model Parameters
@@ -185,6 +186,7 @@ def main():
     tf.gfile.MakeDirs(FLAGS.log_dir)
     tf.gfile.MakeDirs(FLAGS.data_dir)
     tf.gfile.MakeDirs(FLAGS.checkpoint_dir)
+    tf.gfile.MakeDirs(FLAGS.results_dir)
     train()
 
 if __name__=="__main__":
