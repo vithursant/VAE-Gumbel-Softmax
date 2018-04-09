@@ -13,6 +13,7 @@ Also, included is a jupyter notebook which shows how the Gumbel-Max trick for sa
 * [Ananconda](#anaconda)
 * [Docker](#docker)
 * [Results](#results)
+* [Citing VAE-Gumbel-Softmax](#citing-vae-gumbel-softmax)
 
 ## Installation
 
