@@ -96,3 +96,19 @@ Learnable Temperature:              False
 | Ground Truth 	| Reconstructions 	|
 |:------------:	|:---------------:	|
 |![](results/original.png) | ![](results/recons.png)|
+
+### Citing VAE-Gumbel-Softmax
+If you use VAE-Gumbel-Softmax in a scientific publication, I would appreciate references to the source code.
+
+Biblatex entry:
+
+```latex
+@misc{VAEGumbelSoftmax,
+  author = {Thangarasa, Vithursan},
+  title = {VAE-Gumbel-Softmax},
+  year = {2017},
+  publisher = {GitHub},
+  journal = {GitHub repository},
+  howpublished = {\url{https://github.com/vithursant/VAE-Gumbel-Softmax}}
+}
+```
